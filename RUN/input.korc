@@ -1,0 +1,15 @@
+&input_parameters
+  nRE=1
+  simulation_time=1.E0
+  output_time=1.E-2
+  KE0=1.E7 !eV
+  eta0=10. !deg
+  KEmin=1.E5 !ev
+  Epar=0. !V/m
+  ne=1.E20 !m^-3
+  Te=1.e0 !eV
+  Zeff=1.
+  slowing_down = T
+  pitch_diffusion = F
+  energy_diffusion = F
+/
