@@ -141,7 +141,7 @@ write(output_write,'("Setup time: ",E17.10)') (c2-c1)/rate
 
 write(output_write,'("* * * * * * * * * Begin FP * * * * * * * * *")')
 
-call random_init(.true.,.true.)
+call random_seed()
 allocate(rnd1(nRE,2))
 allocate(dW(nRE,2))
 
