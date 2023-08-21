@@ -254,6 +254,12 @@ do iout=1,num_outputs
 #ifdef ACC  
   !$acc end parallel
 #endif ACC
+
+  write(data_write,'("Dump number ",I16)') iout 
+  do pp=1,nRE
+    write(data_write,'("pp,KE (ev),eta (deg): ",I16,E17.10,E17.10)') pp,KE(pp)/C_E,eta(pp)*180._rp/C_PI
+  end do
+
 end do
 
 #ifndef ACC
