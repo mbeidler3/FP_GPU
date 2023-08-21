@@ -175,16 +175,14 @@ call random_seed()
 do iout=1,num_outputs
 
 #ifdef ACC
-  !$acc parallel
-
-  seed = 12345
-  seq = 0
-  offset = 0
-  call curand_init(seed, seq, offset, h)
-
-  !$acc loop
+  !$acc parallel loop
 #endif ACC
   do pp=1,nRE
+
+    seed = 12345_8+iout*num_outputs*nRE+pp*2
+    seq = 0_8
+    offset = 0_8
+    call curand_init(seed, seq, offset, h)
 
     flag=flagCol(pp)
     gam=1._rp+KE(pp)/(C_ME*C_C**2)
