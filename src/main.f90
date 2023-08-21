@@ -141,7 +141,11 @@ write(output_write,'("Setup time: ",E17.10)') (c2-c1)/rate
 
 write(output_write,'("* * * * * * * * * Begin FP * * * * * * * * *")')
 
+#ifdef __NVCOMPILER
+#else
 call random_seed()
+#endif __NVCOMPILER
+
 allocate(rnd1(nRE,2))
 allocate(dW(nRE,2))
 
@@ -151,7 +155,10 @@ do iout=1,num_outputs
 
     do it=1,t_steps
 
+#ifdef __NVCOMPILER
+#else      
       call random_number(rnd1)
+#endif
 
       flag=flagCol(pp)
 

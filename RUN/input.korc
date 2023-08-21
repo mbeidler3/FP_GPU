@@ -11,5 +11,5 @@
   Zeff=1.
   slowing_down = T
   pitch_diffusion = F
-  energy_diffusion = F
+  energy_diffusion = T
 /
