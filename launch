@@ -84,7 +84,7 @@ _scenario_gpu_trial1_mattlaptop_run() {
 _scenario_gpu_trial1_perlmutter_build() {
 
   BUILD_TYPE=Debug
-  HARDWARE_TYPE=CPU
+  HARDWARE_TYPE=GPU
  
   echo cmake configured to generate a $BUILD_TYPE build.
 

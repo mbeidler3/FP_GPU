@@ -255,9 +255,11 @@ do iout=1,num_outputs
 #endif ACC
 end do
 
+#ifndef ACC
 #ifdef __NVCOMPILER
 istat = curandDestroyGenerator(g)
 #endif __NVCOMPILER
+#endif ACC
 
 write(output_write,'("* * * * * * * * * Final Conditions * * * * * * * * *")')
 write(output_write,'("KE (ev),eta (deg): ",E17.10,E17.10)') KE(1)/C_E,eta(1)*180._rp/C_PI
