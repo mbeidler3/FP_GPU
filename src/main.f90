@@ -28,7 +28,7 @@ REAL(rp)	:: dt,simulation_time,output_time
 INTEGER :: nRE,iout,it,pp,num_outputs,t_steps
 REAL(rp),ALLOCATABLE,DIMENSION(:) :: KE,eta
 INTEGER,ALLOCATABLE,DIMENSION(:) :: flagCol
-REAL(rp) :: rnd1,rnd2
+REAL(rp),DIMENSION(2) :: rnd1
 REAL(rp) :: KE0,eta0,gam0,v0
 REAL(rp) :: Epar,ne,Te,Zeff,KEmin
 REAL(rp) :: Clog0,gammac0,vthe0,gammin,vmin,pmin,vratmin,psivratmin,CBmin,nuD
@@ -193,20 +193,18 @@ do iout=1,num_outputs
 #endif ACC
     do it=1,t_steps
 #ifdef ACC
-      rnd1=curand_uniform(h)
-      rnd2=curand_uniform(h)
+      rnd1(1)=curand_uniform(h)
+      rnd1(2)=curand_uniform(h)
 #else
 #ifdef __NVCOMPILER
-      istat = curandGenerateUniformDouble(g, rnd1, 1)
-      istat = curandGenerateUniformDouble(g, rnd2, 1)
+      istat = curandGenerateUniformDouble(g, rnd1, 2)
 #else      
       call random_number(rnd1)
-      call random_number(rnd2)
 #endif __NVCOMPILER
 #endif ACC
 
-      dW1 = SQRT(3*dt)*(-1+2*rnd1)
-      dW2 = SQRT(3*dt)*(-1+2*rnd2)
+      dW1 = SQRT(3*dt)*(-1+2*rnd1(1))
+      dW2 = SQRT(3*dt)*(-1+2*rnd1(2))
       
       vmag=C_C*sqrt(1._rp-1/gam**2)
       pmag=C_ME*C_C*sqrt(gam**2-1._rp)
