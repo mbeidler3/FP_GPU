@@ -175,12 +175,14 @@ call random_seed()
 do iout=1,num_outputs
 
 #ifdef ACC
-  !$acc  parallel loop
+  !$acc parallel
 
   seed = 12345
   seq = 0
   offset = 0
   call curand_init(seed, seq, offset, h)
+
+  !$acc loop seq
 #endif ACC
   do pp=1,nRE
 
@@ -246,8 +248,11 @@ do iout=1,num_outputs
 
     end do
 
-    write(data_write,'("pp,KE (ev),eta (deg): ",I16,E17.10,E17.10)') pp,KE(pp)/C_E,eta(pp)*180._rp/C_PI
+    !write(data_write,'("pp,KE (ev),eta (deg): ",I16,E17.10,E17.10)') pp,KE(pp)/C_E,eta(pp)*180._rp/C_PI
   end do 
+#ifdef ACC  
+  !$acc end parallel loop
+#endif ACC
 end do
 
 #ifdef __NVCOMPILER
