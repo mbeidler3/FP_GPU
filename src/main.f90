@@ -182,12 +182,18 @@ do iout=1,num_outputs
   offset = 0
   call curand_init(seed, seq, offset, h)
 
-  !$acc loop seq
+  !$acc loop
 #endif ACC
   do pp=1,nRE
 
-    do it=1,t_steps
+    flag=flagCol(pp)
+    gam=1._rp+KE(pp)/(C_ME*C_C**2)
+    xi=cos(eta(pp))
 
+#ifdef ACC
+    !$acc loop seq
+#endif ACC
+    do it=1,t_steps
 #ifdef ACC
       rnd1=curand_uniform(h)
       rnd2=curand_uniform(h)
@@ -201,15 +207,11 @@ do iout=1,num_outputs
 #endif __NVCOMPILER
 #endif ACC
 
-      flag=flagCol(pp)
-
       dW1 = SQRT(3*dt)*(-1+2*rnd1)
       dW2 = SQRT(3*dt)*(-1+2*rnd2)
-
-      gam=1._rp+KE(pp)/(C_ME*C_C**2)
+      
       vmag=C_C*sqrt(1._rp-1/gam**2)
       pmag=C_ME*C_C*sqrt(gam**2-1._rp)
-      xi=cos(eta(pp))
 
       vrat=vmag/vthe0
       psivrat=0.5_rp*(ERF(vrat) - 2.0_rp*vrat*EXP(-vrat**2)/SQRT(C_PI))/vrat**2
@@ -239,19 +241,20 @@ do iout=1,num_outputs
         xi=-1-mod(xi,-1._rp)
       endif
 
-      KE(pp)=C_ME*C_C**2*(sqrt(1+(pmag/(C_ME*C_C))**2)-1._rp)
-      eta(pp)=acos(xi)
-
-      if ((KE(pp).lt.KEmin).and.(flag.eq.1)) then
-        flagCol(pp)=0
+      if ((pmag.lt.pmin).and.(flag.eq.1)) then
+        flag=0
       end if
 
     end do
 
+    KE(pp)=C_ME*C_C**2*(sqrt(1+(pmag/(C_ME*C_C))**2)-1._rp)
+    eta(pp)=acos(xi)
+    flagCol(pp)=flag
+
     !write(data_write,'("pp,KE (ev),eta (deg): ",I16,E17.10,E17.10)') pp,KE(pp)/C_E,eta(pp)*180._rp/C_PI
   end do 
 #ifdef ACC  
-  !$acc end parallel loop
+  !$acc end parallel
 #endif ACC
 end do
 
