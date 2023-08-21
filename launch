@@ -108,7 +108,7 @@ _scenario_gpu_trial1_perlmutter_build() {
     cmake \
         -DCMAKE_BUILD_TYPE:String=$BUILD_TYPE \
         -DUSE_ACC=ON \
-        -DCMAKE_Fortran_FLAGS="-fast -acc=gpu -gpu=cc80 -cudalib=curand -Mfree -fPIC -O3 -Mpreprocess" \
+        -DCMAKE_Fortran_FLAGS="-fast -acc=gpu -gpu=cc80 -Mfree -fPIC -O3 -Mpreprocess" \
         -DCMAKE_Fortran_FLAGS_DEBUG="-g -Minfo=all -Minstrument -traceback -lnvhpcwrapnvtx" \
       ..
   else

@@ -1,7 +1,12 @@
 program main
 
 #ifdef __NVCOMPILER
+#ifdef ACC
+use openacc_curand
+#else
 use curand
+#endif ACC
+
 #endif __NVCOMPILER
 
 implicit none
@@ -23,7 +28,7 @@ REAL(rp)	:: dt,simulation_time,output_time
 INTEGER :: nRE,iout,it,pp,num_outputs,t_steps
 REAL(rp),ALLOCATABLE,DIMENSION(:) :: KE,eta
 INTEGER,ALLOCATABLE,DIMENSION(:) :: flagCol
-REAL(rp),ALLOCATABLE,DIMENSION(:) :: rnd1,rnd2
+REAL(rp) :: rnd1,rnd2
 REAL(rp) :: KE0,eta0,gam0,v0
 REAL(rp) :: Epar,ne,Te,Zeff,KEmin
 REAL(rp) :: Clog0,gammac0,vthe0,gammin,vmin,pmin,vratmin,psivratmin,CBmin,nuD
@@ -31,16 +36,17 @@ LOGICAL :: slowing_down,pitch_diffusion,energy_diffusion
 REAL(rp) :: dW1,dW2,gam,vmag,pmag,xi,vrat,psivrat,CB,CA,dCA,CF,dp,dxi
 
 #ifdef __NVCOMPILER
+#ifdef ACC
+type(curandStateXORWOW) :: h
+integer(8) :: seed, seq, offset
+#else
 type(curandGenerator) :: g
 INTEGER :: istat
+#endif ACC
 #endif __NVCOMPILER
 
 NAMELIST /input_parameters/ nRE,simulation_time,output_time,KE0,eta0,Epar,ne,Te,Zeff,KEmin, &
 slowing_down,pitch_diffusion,energy_diffusion
-
-#ifdef ACC 
-  !$acc routine (interp_fields) seq
-#endif
 
 !! initialize system_clock
 CALL system_clock(count_rate=cr)
@@ -98,9 +104,17 @@ Te=Te*C_E
 gam0=1._rp+KE0/(C_ME*C_C**2)
 v0=C_C*sqrt(1._rp-1/gam0**2)
 
-KE=KE0
-eta=eta0
-flagCol=1
+#ifdef ACC
+!$acc  parallel loop
+#endif ACC
+do pp=1,nRE
+  KE(pp)=KE0
+  eta(pp)=eta0
+  flagCol(pp)=1
+end do
+#ifdef ACC  
+!$acc end parallel loop
+#endif ACC
 
 write(output_write,'("Number of electrons: ",I16)') nRE
 write(output_write,'("KE0 (ev),eta0 (deg): ",E17.10,E17.10)') KE0/C_E,eta0*180._rp/C_PI
@@ -150,33 +164,45 @@ write(output_write,'("Setup time: ",E17.10)') (c2-c1)/rate
 
 write(output_write,'("* * * * * * * * * Begin FP * * * * * * * * *")')
 
+#ifndef ACC
 #ifdef __NVCOMPILER
-istat = curandCreateGenerator(g,CURAND_RNG_PSEUDO_XORWOW)
+istat = curandCreateGeneratorHost(g,CURAND_RNG_PSEUDO_XORWOW)
 #else
 call random_seed()
 #endif __NVCOMPILER
-
-allocate(rnd1(nRE))
-allocate(rnd2(nRE))
+#endif ACC
 
 do iout=1,num_outputs
 
+#ifdef ACC
+  !$acc  parallel loop
+
+  seed = 12345
+  seq = 0
+  offset = 0
+  call curand_init(seed, seq, offset, h)
+#endif ACC
   do pp=1,nRE
 
     do it=1,t_steps
 
+#ifdef ACC
+      rnd1=curand_uniform(h)
+      rnd2=curand_uniform(h)
+#else
 #ifdef __NVCOMPILER
-      istat = curandGenerateUniformDouble(g, rnd1, nRE)
-      istat = curandGenerateUniformDouble(g, rnd2, nRE)
+      istat = curandGenerateUniformDouble(g, rnd1, 1)
+      istat = curandGenerateUniformDouble(g, rnd2, 1)
 #else      
       call random_number(rnd1)
       call random_number(rnd2)
-#endif
+#endif __NVCOMPILER
+#endif ACC
 
       flag=flagCol(pp)
 
-      dW1 = SQRT(3*dt)*(-1+2*rnd1(pp))
-      dW2 = SQRT(3*dt)*(-1+2*rnd2(pp))
+      dW1 = SQRT(3*dt)*(-1+2*rnd1)
+      dW2 = SQRT(3*dt)*(-1+2*rnd2)
 
       gam=1._rp+KE(pp)/(C_ME*C_C**2)
       vmag=C_C*sqrt(1._rp-1/gam**2)
@@ -219,9 +245,9 @@ do iout=1,num_outputs
       end if
 
     end do
-  end do 
 
-  write(data_write,'("KE (ev),eta (deg): ",E17.10,E17.10)') KE/C_E,eta*180._rp/C_PI
+    write(data_write,'("pp,KE (ev),eta (deg): ",I16,E17.10,E17.10)') pp,KE(pp)/C_E,eta(pp)*180._rp/C_PI
+  end do 
 end do
 
 #ifdef __NVCOMPILER
