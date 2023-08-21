@@ -32,6 +32,7 @@ REAL(rp) :: dW1,dW2,gam,vmag,pmag,xi,vrat,psivrat,CB,CA,dCA,CF,dp,dxi
 
 #ifdef __NVCOMPILER
 type(curandGenerator) :: g
+INTEGER :: istat
 #endif __NVCOMPILER
 
 NAMELIST /input_parameters/ nRE,simulation_time,output_time,KE0,eta0,Epar,ne,Te,Zeff,KEmin, &
@@ -150,7 +151,7 @@ write(output_write,'("Setup time: ",E17.10)') (c2-c1)/rate
 write(output_write,'("* * * * * * * * * Begin FP * * * * * * * * *")')
 
 #ifdef __NVCOMPILER
-istat = curandCreateGeneratorHost(g,CURAND_RNG_PSEUDO_XORWOW)
+istat = curandCreateGenerator(g,CURAND_RNG_PSEUDO_XORWOW)
 #else
 call random_seed()
 #endif __NVCOMPILER
@@ -165,8 +166,8 @@ do iout=1,num_outputs
     do it=1,t_steps
 
 #ifdef __NVCOMPILER
-      istat = curandGenerate(g, rnd1, nRE)
-      istat = curandGenerate(g, rnd2, nRE)
+      istat = curandGenerateUniformDouble(g, rnd1, nRE)
+      istat = curandGenerateUniformDouble(g, rnd2, nRE)
 #else      
       call random_number(rnd1)
       call random_number(rnd2)

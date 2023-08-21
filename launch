@@ -100,7 +100,7 @@ _scenario_gpu_trial1_perlmutter_build() {
   then
     cmake \
         -DCMAKE_BUILD_TYPE:String=$BUILD_TYPE \
-        -DCMAKE_Fortran_FLAGS="-Mfree -Mpreprocess -r8 -fPIC -O3 -mp -ta=tesla -cuda -cudalib=curand" \
+        -DCMAKE_Fortran_FLAGS="-Mfree -Mpreprocess -r8 -fPIC -O3 -mp -cuda -cudalib=curand" \
         -DCMAKE_Fortran_FLAGS_DEBUG="-g -Minfo=all -Minstrument -traceback -lnvhpcwrapnvtx" \
       ..
   elif [ "$HARDWARE_TYPE" == GPU ]
