@@ -1,5 +1,9 @@
 program main
 
+#ifdef __NVCOMPILER
+use curand
+#endif __NVCOMPILER
+
 implicit none
 
 INTEGER,PARAMETER :: rp = KIND(0.d0)
@@ -19,12 +23,16 @@ REAL(rp)	:: dt,simulation_time,output_time
 INTEGER :: nRE,iout,it,pp,num_outputs,t_steps
 REAL(rp),ALLOCATABLE,DIMENSION(:) :: KE,eta
 INTEGER,ALLOCATABLE,DIMENSION(:) :: flagCol
-REAL(rp),ALLOCATABLE,DIMENSION(:,:) :: rnd1,dW
+REAL(rp),ALLOCATABLE,DIMENSION(:) :: rnd1,rnd2
 REAL(rp) :: KE0,eta0,gam0,v0
 REAL(rp) :: Epar,ne,Te,Zeff,KEmin
 REAL(rp) :: Clog0,gammac0,vthe0,gammin,vmin,pmin,vratmin,psivratmin,CBmin,nuD
 LOGICAL :: slowing_down,pitch_diffusion,energy_diffusion
 REAL(rp) :: dW1,dW2,gam,vmag,pmag,xi,vrat,psivrat,CB,CA,dCA,CF,dp,dxi
+
+#ifdef __NVCOMPILER
+type(curandGenerator) :: g
+#endif __NVCOMPILER
 
 NAMELIST /input_parameters/ nRE,simulation_time,output_time,KE0,eta0,Epar,ne,Te,Zeff,KEmin, &
 slowing_down,pitch_diffusion,energy_diffusion
@@ -142,12 +150,13 @@ write(output_write,'("Setup time: ",E17.10)') (c2-c1)/rate
 write(output_write,'("* * * * * * * * * Begin FP * * * * * * * * *")')
 
 #ifdef __NVCOMPILER
+istat = curandCreateGeneratorHost(g,CURAND_RNG_PSEUDO_XORWOW)
 #else
 call random_seed()
 #endif __NVCOMPILER
 
-allocate(rnd1(nRE,2))
-allocate(dW(nRE,2))
+allocate(rnd1(nRE))
+allocate(rnd2(nRE))
 
 do iout=1,num_outputs
 
@@ -156,14 +165,17 @@ do iout=1,num_outputs
     do it=1,t_steps
 
 #ifdef __NVCOMPILER
+      istat = curandGenerate(g, rnd1, nRE)
+      istat = curandGenerate(g, rnd2, nRE)
 #else      
       call random_number(rnd1)
+      call random_number(rnd2)
 #endif
 
       flag=flagCol(pp)
 
-      dW1 = SQRT(3*dt)*(-1+2*rnd1(pp,1))
-      dW2 = SQRT(3*dt)*(-1+2*rnd1(pp,2))
+      dW1 = SQRT(3*dt)*(-1+2*rnd1(pp))
+      dW2 = SQRT(3*dt)*(-1+2*rnd2(pp))
 
       gam=1._rp+KE(pp)/(C_ME*C_C**2)
       vmag=C_C*sqrt(1._rp-1/gam**2)
@@ -210,6 +222,10 @@ do iout=1,num_outputs
 
   write(data_write,'("KE (ev),eta (deg): ",E17.10,E17.10)') KE/C_E,eta*180._rp/C_PI
 end do
+
+#ifdef __NVCOMPILER
+istat = curandDestroyGenerator(g)
+#endif __NVCOMPILER
 
 write(output_write,'("* * * * * * * * * Final Conditions * * * * * * * * *")')
 write(output_write,'("KE (ev),eta (deg): ",E17.10,E17.10)') KE(1)/C_E,eta(1)*180._rp/C_PI

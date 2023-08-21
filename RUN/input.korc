@@ -10,6 +10,6 @@
   Te=1.e0 !eV
   Zeff=1.
   slowing_down = T
-  pitch_diffusion = F
+  pitch_diffusion = T
   energy_diffusion = T
 /

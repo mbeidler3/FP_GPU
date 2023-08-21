@@ -27,6 +27,7 @@ fclose(fileID);
 %% LOAD OUTPUT DATA
 
 KE=zeros(1,ndump);
+eta=zeros(1,ndump);
 
 filename2='./data.korc';
 
@@ -36,6 +37,7 @@ fileID = fopen(filename2,'r');
 for ii=1:ndump    
     tmp = textscan(fileID,'%s %s %s %f %f',1);
     KE(ii)=tmp{4};
+    eta(ii)=tmp{5};
 end
 
 fclose(fileID);
@@ -70,3 +72,9 @@ hold on
 plot(time,K_NB_model1)
 
 legend({'FP','model'})
+
+fig=figure;
+plot(time,eta)
+
+
+legend({'FP'})
