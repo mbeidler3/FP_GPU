@@ -146,11 +146,12 @@ allocate(rnd1(nRE,2))
 allocate(dW(nRE,2))
 
 do iout=1,num_outputs
-  do it=1,t_steps
 
-    call random_number(rnd1)
+  do pp=1,nRE
 
-    do pp=1,nRE
+    do it=1,t_steps
+
+      call random_number(rnd1)
 
       flag=flagCol(pp)
 
