@@ -179,10 +179,12 @@ do iout=1,num_outputs
 #endif ACC
   do pp=1,nRE
 
+#ifdef ACC
     seed = 12345_8+iout*num_outputs*nRE+pp*2
     seq = 0_8
     offset = 0_8
     call curand_init(seed, seq, offset, h)
+#endif ACC
 
     flag=flagCol(pp)
     gam=1._rp+KE(pp)/(C_ME*C_C**2)
@@ -192,6 +194,7 @@ do iout=1,num_outputs
     !$acc loop seq
 #endif ACC
     do it=1,t_steps
+
 #ifdef ACC
       rnd1(1)=curand_uniform(h)
       rnd1(2)=curand_uniform(h)
@@ -241,13 +244,14 @@ do iout=1,num_outputs
         flag=0
       end if
 
+      gam=sqrt(1._rp+(pmag/(C_ME*C_C))**2)
+
     end do
 
     KE(pp)=C_ME*C_C**2*(sqrt(1+(pmag/(C_ME*C_C))**2)-1._rp)
     eta(pp)=acos(xi)
     flagCol(pp)=flag
 
-    !write(data_write,'("pp,KE (ev),eta (deg): ",I16,E17.10,E17.10)') pp,KE(pp)/C_E,eta(pp)*180._rp/C_PI
   end do 
 #ifdef ACC  
   !$acc end parallel

@@ -33,11 +33,21 @@ filename2='./data.korc';
 
 fileID = fopen(filename2,'r');
 
+tmp = textscan(fileID,'%s %s %s %f %f',1);
+KE(1)=tmp{4};
+eta(1)=tmp{5};
+
+tmp = fgetl(fileID);
 
 for ii=1:ndump    
-    tmp = textscan(fileID,'%s %s %s %f %f',1);
-    KE(ii)=tmp{4};
-    eta(ii)=tmp{5};
+    
+    tmp = fgetl(fileID);
+    
+    tmp = textscan(fileID,'%s %s %s %d %f %f',1);
+    KE(ii+1)=tmp{5};
+    eta(ii+1)=tmp{6};
+    
+    tmp = fgetl(fileID);
 end
 
 fclose(fileID);
@@ -50,7 +60,7 @@ qe=1.602176E-19;
 mu0=4.0*pi*1E-7;
 ep0= 1.0/(mu0*c^2);
 
-time=linspace(0,sim_time,ndump);
+time=linspace(0,sim_time,ndump+1);
 
 KE0=10.e6*qe; 
 E0=KE0+(me*c^2);
@@ -67,7 +77,7 @@ K_NB_model1=(KE0-gammac*ne*Clog0/(me*c)*time)/qe;
 %% Plotting
 
 fig=figure;
-plot(time,KE)
+plot(time,KE,'-o')
 hold on
 plot(time,K_NB_model1)
 
@@ -75,6 +85,4 @@ legend({'FP','model'})
 
 fig=figure;
 plot(time,eta)
-
-
 legend({'FP'})
